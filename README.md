@@ -1,4 +1,4 @@
-# Back-Propagation 算法实现作业
+# Back-Propagation 算法
 算法实现部分包括两个程序文件和三个权重文件：
 - BackPropagation.py: 实现了BP算法训练神经网络，打印出训练过程中的loss变化曲线，并保存神经网络的权重参数；
 - NolinearFun.py: 读取权重参数，可视化网络性能；
