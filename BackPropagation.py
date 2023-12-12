@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
-# 定义激活函数及其导数 (使用sigmoid/Relu/线性函数)
+# 定义激活函数及其导数 (使用sigmoid/Relu/LeakRelu/线性函数)
 def sigmoid(x):
     x_clipped = np.clip(x, -500, 500)  # 限制 x 的范围以防止 exp 溢出
     return 1 / (1 + np.exp(-x_clipped))
@@ -51,6 +51,7 @@ epochs = 5000              # 迭代次数
 x1_values = np.linspace(-0.5, 0.5, 100)             # 训练集区间
 x2_values = np.linspace(-0.5, 0.5, 100)
 X1, X2 = np.meshgrid(x1_values, x2_values)
+# 目标函数
 y_values = 5 * (np.sin(X1 + X2) * np.exp(-np.abs(X1 - X2)))
 input_data = np.column_stack((X1.ravel(), X2.ravel()))
 output_data = y_values.ravel().reshape(-1, 1)
@@ -102,9 +103,10 @@ for epoch in range(epochs):
     output_layer_output = linear_func(output_layer_input)
 
     # 计算损失,计算目标函数
-    # loss = np.square(output_data - output_layer_output).sum() / 2
     loss = np.mean(np.square(output_data - output_layer_output))
     loss_history.append(loss)
+
+    # 设置自适应学习率
     if loss < last_loss:
         learning_rate *= 1.02
     else:
@@ -129,6 +131,7 @@ for epoch in range(epochs):
     # weights_hidden2_hidden3 += learning_rate * np.dot(hidden_layer2_output.T, hidden_layer3_delta)
     # weights_hidden1_hidden2 += learning_rate * np.dot(hidden_layer1_output.T, hidden_layer2_delta)
     # weights_input_hidden1 += learning_rate * np.dot(input_data.T, hidden_layer1_delta)
+
     # 更新权重，并加入动量项
     v_weights_input_hidden1 = momentum * v_weights_input_hidden1 + learning_rate * np.dot(input_data.T,
                                                                                           hidden_layer1_delta)
@@ -147,22 +150,19 @@ for epoch in range(epochs):
     weights_hidden3_output += v_weights_hidden3_output
 
     # 打印损失
-    # if epoch % 1000 == 0:
-    print('Epoch: %d, Loss: %.5f' % (epoch, loss))
+    if epoch % 1000 == 0:
+        print('Epoch: %d, Loss: %.5f' % (epoch, loss))
 
 # 损失可视化(Loss)
 plt.figure(figsize=(10, 6))
 plt.plot(loss_history, label='Training Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
-# plt.title('Training Loss Over Epochs')
 
 # 在子图上绘制放大的部分
 left, bottom, width, height = [0.4, 0.3, 0.3, 0.3]
 ax2 = plt.axes([left, bottom, width, height])
 ax2.plot(loss_history[:200], color='tab:orange')
-#ax2.set_title('Zoom in on the first 200 epochs')
-# plt.legend()
 plt.show()
 
 
@@ -259,7 +259,7 @@ errors = output_data_test - output_layer_output
 thresholds = 0.05 * np.abs(output_data_test)
 
 # 比较误差是否小于对应期望值的5%
-error_comparison = np.abs(errors) < thresholds
+error_comparison = np.abs(errors) > thresholds
 
 # 找出最大的符合条件的误差
 max_compliant_error = np.max(np.abs(errors[error_comparison]))
